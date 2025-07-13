@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -9,17 +10,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// Server — структура нашего сервера
 type Server struct {
 	Logger *log.Logger
 	Server *http.Server
 }
 
-// NewServer создает и возвращает новый экземпляр сервера
 func NewServer(logger *log.Logger) (*Server, error) {
 	router := mux.NewRouter()
 
-	// Регистрируем наши хэндлеры
 	router.HandleFunc("/", handlers.HomeHandler)
 	router.HandleFunc("/upload", handlers.UploadHandler)
 
@@ -36,4 +34,14 @@ func NewServer(logger *log.Logger) (*Server, error) {
 		Logger: logger,
 		Server: server,
 	}, nil
+}
+
+func (srv *Server) StartServer() error {
+	time.Sleep(1 * time.Second)
+
+	return srv.Server.ListenAndServe()
+}
+
+func (srv *Server) ShutdownServer(ctx context.Context) error {
+	return srv.Server.Shutdown(ctx)
 }
