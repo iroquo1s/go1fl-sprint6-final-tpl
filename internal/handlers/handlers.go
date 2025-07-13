@@ -74,5 +74,5 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "The result is saved to a file: %s\n", filename)
+	fmt.Fprintf(w, convertedStr)
 }
