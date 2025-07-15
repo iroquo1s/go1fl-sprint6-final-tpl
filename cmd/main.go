@@ -19,5 +19,4 @@ func main() {
 		log.Fatalf("Error start server: %v", err)
 	}
 
-	select {}
 }

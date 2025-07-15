@@ -15,6 +15,7 @@ type Server struct {
 	Server *http.Server
 }
 
+// Создаем новый сервер
 func NewServer(logger *log.Logger) (*Server, error) {
 	router := mux.NewRouter()
 
@@ -36,12 +37,13 @@ func NewServer(logger *log.Logger) (*Server, error) {
 	}, nil
 }
 
+// Запускаем HTTP-сервер с выводом лога порта запуска
 func (srv *Server) StartServer() error {
-	time.Sleep(1 * time.Second)
-
+	srv.Logger.Printf("HTTP server started on port %s\n", srv.Server.Addr)
 	return srv.Server.ListenAndServe()
 }
 
+// Остановка сервера
 func (srv *Server) ShutdownServer(ctx context.Context) error {
 	return srv.Server.Shutdown(ctx)
 }

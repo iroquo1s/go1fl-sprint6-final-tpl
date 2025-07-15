@@ -13,31 +13,24 @@ import (
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	filePath := "./index.html"
 
-	f, err := os.Open(filePath)
-	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
-		log.Printf("Fiel not Found: %v", err)
-
-		return
-	}
-	defer f.Close()
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	_, err = io.Copy(w, f)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Printf("Internal Server Error: %v", err)
-		return
-	}
-
+	http.ServeFile(w, r, filePath)
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, "Error size file", http.StatusBadRequest)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // Limit file size to 10 MB
+		http.Error(w, "File exceeds size limit", http.StatusBadRequest)
 		return
 	}
 
@@ -50,29 +43,33 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "Error read file", http.StatusInternalServerError)
+		http.Error(w, "Error reading file", http.StatusInternalServerError)
 		return
 	}
 
 	convertedStr, err := service.DetectContent(data)
 	if err != nil {
-		http.Error(w, "Error conver string", http.StatusInternalServerError)
+		http.Error(w, "Error converting string", http.StatusInternalServerError)
 		return
 	}
 
-	filename := fmt.Sprintf("%s.%s", time.Now().UTC().Format(time.RFC3339Nano), filepath.Ext(handler.Filename))
+	filename := fmt.Sprintf("%s%s", time.Now().UTC().Format(time.RFC3339Nano), filepath.Ext(handler.Filename))
 
 	outputFile, err := os.Create(filename)
 	if err != nil {
-		http.Error(w, "Error create file", http.StatusInternalServerError)
+		http.Error(w, "Error creating file", http.StatusInternalServerError)
 		return
 	}
 	defer outputFile.Close()
 
-	if _, err := outputFile.Write([]byte(convertedStr)); err != nil {
-		http.Error(w, "Error write in file", http.StatusInternalServerError)
+	if _, err := outputFile.WriteString(convertedStr); err != nil {
+		http.Error(w, "Error writing to file", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintf(w, convertedStr)
+	if _, err := fmt.Fprintf(w, convertedStr); err != nil {
+		log.Println("Output error:", err)
+		http.Error(w, "Error generating response", http.StatusInternalServerError)
+		return
+	}
 }
