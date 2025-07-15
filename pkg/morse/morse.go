@@ -341,7 +341,7 @@ func WithCharSeparator(charSeparator string) ConverterOption {
 	}
 }
 
-// WithWordSeparator sets the Word Separator.
+// WithWordSeparator sets 	the Word Separator.
 // The Word Separator is used to separate two words, usually this is the Character Separator, a Space and another Character Separator.
 func WithWordSeparator(wordSeparator string) ConverterOption {
 	return func(c Converter) Converter {
